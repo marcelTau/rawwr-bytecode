@@ -24,23 +24,31 @@ impl From<OpCode> for u8 {
 pub struct Chunk {
     code: Vec<u8>,
     constants: ValueArray,
+    lines: Vec<usize>,
 }
 
 impl Chunk {
     pub fn new() -> Self {
-        Self { code: Vec::new(), constants: ValueArray::new() }
+        Self {
+            code: Vec::new(),
+            constants: ValueArray::new(),
+            lines: Vec::new(),
+        }
     }
 
-    pub fn write_opcode(&mut self, byte: OpCode) {
+    pub fn write_opcode(&mut self, byte: OpCode, line: usize) {
         self.code.push(byte.into());
+        self.lines.push(line);
     }
 
-    pub fn write(&mut self, byte: u8) {
+    pub fn write(&mut self, byte: u8, line: usize) {
         self.code.push(byte);
+        self.lines.push(line);
     }
 
     pub fn free(&mut self) {
         self.code = Vec::new();
+        self.lines = Vec::new();
         self.constants.free();
     }
 
@@ -49,8 +57,9 @@ impl Chunk {
         (self.constants.len() - 1) as u8
     }
 
-    pub fn disassemble<T>(&self, name: T) 
-        where T: ToString + std::fmt::Display
+    pub fn disassemble<T>(&self, name: T)
+    where
+        T: ToString + std::fmt::Display,
     {
         println!("== {} ==", name);
 
@@ -62,6 +71,12 @@ impl Chunk {
 
     fn disassemble_instruction(&self, offset: usize) -> usize {
         print!("{:04} ", offset);
+
+        if offset > 0 && (self.lines[offset] == self.lines[offset - 1]) {
+            print!("   | ");
+        } else {
+            print!("{:04} ", self.lines[offset]);
+        }
 
         let instruction: OpCode = self.code[offset].into();
         match instruction {
