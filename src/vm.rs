@@ -40,20 +40,20 @@ impl VM {
         loop {
             let token: Token = scanner.scan_token();
 
-            if token.line != line {
-                print!("{:#4}", token.line);
-                line = token.line;
-            } else {
-                print!("   | ");
-            }
-            println!("{:#10?} '{token_start:.*}'", token.token_type, token.start.len(), token_start=token.start);
+            println!("      Got token: {:?}", token);
+
+            //if token.line != line {
+                //print!("{:#4}", token.line);
+                //line = token.line;
+            //} else {
+                //print!("   | ");
+            //}
+            //println!("XXX: {:#10?} '{token_start:.*}'", token.token_type, token.start.len(), token_start=token.start);
 
             if token.token_type == TokenType::Eof {
                 break;
             }
         }
-
-
 
         InterpretResult::OK
     }

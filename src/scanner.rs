@@ -1,5 +1,6 @@
 use crate::token::*;
 
+#[derive(Debug)]
 pub struct Scanner {
     source: String,
     current: usize,
@@ -25,6 +26,12 @@ impl Scanner {
 
     pub fn scan_token(&mut self) -> Token {
         self.source = self.source[self.current..].to_string();
+        self.current = 0;
+        self.skip_whitespace();
+        self.source = self.source[self.current..].to_string();
+        self.current = 0;
+
+        println!("Scanning source: '{}'({}) | current = {}", self.source.trim(), self.source.len(), self.current);
 
         if self.is_at_end() {
             return self.make_token(TokenType::Eof);
@@ -81,15 +88,62 @@ impl Scanner {
                 }
             }
             '"' => self.string(),
-            _ => self.error_token("Unexpected character."),
+            _ => {
+                println!("Unexpected character: {}", c);
+                self.error_token("Unexpected character.")
+            }
         }
     }
 
     fn identifier_type(&self) -> TokenType {
-        TokenType::Identifier
+        //println!("identifier_type: {:?}", self);
+        match self.at(0) {
+            'a' => return self.check_keyword(1, 2, "nd", TokenType::And),
+            'c' => return self.check_keyword(1, 4, "lass", TokenType::Class),
+            'e' => return self.check_keyword(1, 3, "lse", TokenType::Else),
+            'i' => return self.check_keyword(1, 1, "f", TokenType::If),
+            'n' => return self.check_keyword(1, 2, "il", TokenType::Nil),
+            'o' => return self.check_keyword(1, 1, "r", TokenType::Or),
+            'p' => return self.check_keyword(1, 4, "rint", TokenType::Print),
+            'r' => return self.check_keyword(1, 5, "eturn", TokenType::Return),
+            's' => return self.check_keyword(1, 4, "uper", TokenType::Super),
+            'v' => return self.check_keyword(1, 2, "ar", TokenType::Var),
+            'w' => return self.check_keyword(1, 4, "hile", TokenType::While),
+            'f' => if self.current > 1 {
+                match self.at(1) {
+                    'a' => return self.check_keyword(2, 3, "lse", TokenType::False),
+                    'o' => return self.check_keyword(2, 1, "r", TokenType::For),
+                    'u' => return self.check_keyword(2, 1, "n", TokenType::Fun),
+                    _ => {}
+                }
+            },
+            't' => if self.current > 1 {
+                match self.at(1) {
+                    'h' => return self.check_keyword(2, 2, "is", TokenType::This),
+                    'r' => return self.check_keyword(2, 2, "ue", TokenType::True),
+                    _ => {}
+                }
+            },
+            _ => {}
+        }
+        unreachable!();
+        //TokenType::Identifier
+    }
+
+    // @todo this really needs to be tested
+    fn check_keyword(&self, start: usize, length: usize, rest: &str, ttype: TokenType) -> TokenType {
+
+        //println!("xx - {}", &self.source[start..(start + length)]);
+        //println!("self.current == start + length && &self.source[start..(start + length)] == rest = {}", self.current == start + length && &self.source[start..(start + length)] == rest);
+        if self.current == start + length && &self.source[start..(start + length)] == rest {
+            ttype
+        } else {
+            TokenType::Identifier
+        }
     }
 
     fn identifier(&mut self) -> Token {
+        //println!("identifier");
         while is_alpha(self.peek()) || is_digit(self.peek()) {
             self.advance();
         }
@@ -157,16 +211,16 @@ impl Scanner {
 
     fn peek(&self) -> char {
         if self.is_at_end() {
-            return '\n';
+            return '\0';
         }
-        self.at(self.current + 1)
+        self.at(self.current)
     }
 
     fn peek_next(&self) -> char {
         if self.is_at_end() {
-            return '\n';
+            return '\0';
         }
-        self.at(self.current + 2)
+        self.at(self.current + 1)
     }
 
     fn advance(&mut self) -> char {
@@ -175,7 +229,7 @@ impl Scanner {
     }
 
     fn is_at_end(&self) -> bool {
-        self.source.len() >= self.current
+        self.source.len() <= self.current
     }
 
     fn is_match(&mut self, c: char) -> bool {
