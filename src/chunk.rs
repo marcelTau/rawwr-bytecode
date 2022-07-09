@@ -2,6 +2,7 @@ use crate::value::*;
 
 pub enum OpCode {
     Constant,
+    Negate,
     Return,
 }
 
@@ -9,7 +10,8 @@ impl From<u8> for OpCode {
     fn from(code: u8) -> Self {
         match code {
             0 => OpCode::Constant,
-            1 => OpCode::Return,
+            1 => OpCode::Negate,
+            2 => OpCode::Return,
             _ => unimplemented!("Invalid Opcode"),
         }
     }
@@ -22,8 +24,8 @@ impl From<OpCode> for u8 {
 }
 
 pub struct Chunk {
-    code: Vec<u8>,
-    constants: ValueArray,
+    pub code: Vec<u8>,
+    pub constants: ValueArray,
     lines: Vec<usize>,
 }
 
@@ -52,6 +54,7 @@ impl Chunk {
         self.constants.free();
     }
 
+    /// @return index of the constant
     pub fn add_constant(&mut self, value: Value) -> u8 {
         self.constants.write(value);
         (self.constants.len() - 1) as u8
@@ -61,7 +64,7 @@ impl Chunk {
     where
         T: ToString + std::fmt::Display,
     {
-        println!("== {} ==", name);
+        println!("== {name} ==");
 
         let mut offset: usize = 0;
         while offset < self.code.len() {
@@ -69,8 +72,8 @@ impl Chunk {
         }
     }
 
-    fn disassemble_instruction(&self, offset: usize) -> usize {
-        print!("{:04} ", offset);
+    pub fn disassemble_instruction(&self, offset: usize) -> usize {
+        print!("{offset:04} ");
 
         if offset > 0 && (self.lines[offset] == self.lines[offset - 1]) {
             print!("   | ");
@@ -81,6 +84,7 @@ impl Chunk {
         let instruction: OpCode = self.code[offset].into();
         match instruction {
             OpCode::Return => self.simple_instruction("OP_RETURN", offset),
+            OpCode::Negate => self.simple_instruction("OP_NEGATE", offset),
             OpCode::Constant => self.constant_instruction("OP_CONSTANT", offset),
         }
     }
@@ -98,3 +102,56 @@ impl Chunk {
         offset + 2
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn x() {
+        let mut c = Chunk::new();
+        let constant = c.add_constant(1.2);
+        c.write_opcode(OpCode::Constant, 1);
+
+        assert_eq!();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

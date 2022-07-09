@@ -1,7 +1,7 @@
 pub type Value = f64;
 
 pub struct ValueArray {
-    values: Vec<Value>,
+    pub values: Vec<Value>,
 }
 
 impl ValueArray {
