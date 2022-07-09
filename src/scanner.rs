@@ -23,66 +23,99 @@ impl Scanner {
         }
 
         match self.advance() {
-            b'(' => self.make_token(TokenType::LeftParen),
-            b')' => self.make_token(TokenType::RightParen),
-            b'{' => self.make_token(TokenType::LeftBrace),
-            b'}' => self.make_token(TokenType::RightBrace),
-            b';' => self.make_token(TokenType::Semicolon),
-            b',' => self.make_token(TokenType::Comma),
-            b'.' => self.make_token(TokenType::Dot),
-            b'-' => self.make_token(TokenType::Minus),
-            b'+' => self.make_token(TokenType::Plus),
-            b'/' => self.make_token(TokenType::Slash),
-            b'*' => self.make_token(TokenType::Star),
-            b'!' => {
-                if self.is_match(b'=') {
+            '(' => self.make_token(TokenType::LeftParen),
+            ')' => self.make_token(TokenType::RightParen),
+            '{' => self.make_token(TokenType::LeftBrace),
+            '}' => self.make_token(TokenType::RightBrace),
+            ';' => self.make_token(TokenType::Semicolon),
+            ',' => self.make_token(TokenType::Comma),
+            '.' => self.make_token(TokenType::Dot),
+            '-' => self.make_token(TokenType::Minus),
+            '+' => self.make_token(TokenType::Plus),
+            '/' => self.make_token(TokenType::Slash),
+            '*' => self.make_token(TokenType::Star),
+            '!' => {
+                if self.is_match('=') {
                     self.make_token(TokenType::BangEqual)
                 } else {
                     self.make_token(TokenType::Bang)
                 }
             }
-            b'=' => {
-                if self.is_match(b'=') {
+            '=' => {
+                if self.is_match('=') {
                     self.make_token(TokenType::EqualEqual)
                 } else {
                     self.make_token(TokenType::Equal)
                 }
             }
-            b'<' => {
-                if self.is_match(b'=') {
+            '<' => {
+                if self.is_match('=') {
                     self.make_token(TokenType::LessEqual)
                 } else {
                     self.make_token(TokenType::Less)
                 }
             }
-            b'>' => {
-                if self.is_match(b'=') {
+            '>' => {
+                if self.is_match('=') {
                     self.make_token(TokenType::GreaterEqual)
                 } else {
                     self.make_token(TokenType::Greater)
                 }
             }
+            '"' => self.string(),
+            '0'..='9' => self.number(),
             _ => self.error_token("Unexpected character."),
         }
+    }
+
+    fn number(&mut self) -> Token {
+        while self.peek().is_ascii_digit() {
+            self.advance();
+        }
+
+        if self.peek() == '.' && self.peek_next().is_ascii_digit() {
+            self.advance();
+            while self.peek().is_ascii_digit() {
+                self.advance();
+            }
+        }
+
+        self.make_token(TokenType::NumberLiteral)
+    }
+
+    fn string(&mut self) -> Token {
+        while self.peek() != '"' && !self.is_at_end() {
+            if self.peek() == '\n' {
+                self.line += 1;
+            }
+            self.advance();
+        }
+
+        if self.is_at_end() {
+            return self.error_token("Unterminated string.")
+        }
+
+        self.advance();
+        self.make_token(TokenType::StringLiteral)
     }
 
     fn skip_whitespace(&mut self) {
         loop {
             match self.peek() {
-                b' ' | b'\r' | b'\t' => self.advance(),
-                b'\n' => {
+                ' ' | '\r' | '\t' => self.advance(),
+                '\n' => {
                     self.line += 1;
                     self.advance()
                 }
-                b'/' => {
-                    if self.peek_next() == b'/' {
-                        while self.peek() != b'\n' && !self.is_at_end() {
+                '/' => {
+                    if self.peek_next() == '/' {
+                        while self.peek() != '\n' && !self.is_at_end() {
                             self.advance();
                         }
                     } else {
                         break
                     }
-                    b' ' // @FIXME hacky workaround, how can i avoid this
+                    ' ' // @FIXME hacky workaround, how can i avoid this
                 }
 
                 _ => break,
@@ -90,25 +123,25 @@ impl Scanner {
         }
     }
 
-    fn at(&self, idx: usize) -> u8 {
-        self.source.bytes().nth(idx).unwrap()
+    fn at(&self, idx: usize) -> char {
+        self.source.bytes().nth(idx).unwrap() as char
     }
 
-    fn peek(&self) -> u8 {
+    fn peek(&self) -> char {
         if self.is_at_end() {
-            return b'\n';
+            return '\n';
         }
         self.at(self.current + 1)
     }
 
-    fn peek_next(&self) -> u8 {
+    fn peek_next(&self) -> char {
         if self.is_at_end() {
-            return b'\n';
+            return '\n';
         }
         self.at(self.current + 2)
     }
 
-    fn advance(&mut self) -> u8 {
+    fn advance(&mut self) -> char {
         self.current += 1;
         self.at(self.current - 1)
     }
@@ -117,7 +150,7 @@ impl Scanner {
         self.source.len() >= self.current
     }
 
-    fn is_match(&mut self, c: u8) -> bool {
+    fn is_match(&mut self, c: char) -> bool {
         if self.is_at_end() {
             return false;
         }
