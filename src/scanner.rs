@@ -6,6 +6,14 @@ pub struct Scanner {
     line: usize,
 }
 
+fn is_digit(c: char) -> bool {
+    ('0'..='9').contains(&c)
+}
+
+fn is_alpha(c: char) -> bool {
+    ('a'..='z').contains(&c) || ('A'..='Z').contains(&c) || c == '_'
+}
+
 impl Scanner {
     pub fn new(source: &String) -> Self {
         Scanner {
@@ -22,7 +30,17 @@ impl Scanner {
             return self.make_token(TokenType::Eof);
         }
 
-        match self.advance() {
+        let c = self.advance();
+
+        if is_alpha(c) {
+            return self.identifier();
+        }
+
+        if is_digit(c) {
+            return self.number();
+        }
+
+        match c {
             '(' => self.make_token(TokenType::LeftParen),
             ')' => self.make_token(TokenType::RightParen),
             '{' => self.make_token(TokenType::LeftBrace),
@@ -63,9 +81,19 @@ impl Scanner {
                 }
             }
             '"' => self.string(),
-            '0'..='9' => self.number(),
             _ => self.error_token("Unexpected character."),
         }
+    }
+
+    fn identifier_type(&self) -> TokenType {
+        TokenType::Identifier
+    }
+
+    fn identifier(&mut self) -> Token {
+        while is_alpha(self.peek()) || is_digit(self.peek()) {
+            self.advance();
+        }
+        self.make_token(self.identifier_type())
     }
 
     fn number(&mut self) -> Token {
@@ -162,6 +190,7 @@ impl Scanner {
         self.current += 1;
         true
     }
+
 
     fn make_token(&self, ttype: TokenType) -> Token {
         Token::new(ttype, &self.source[..self.current], self.line)
