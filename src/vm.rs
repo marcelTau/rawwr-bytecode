@@ -1,6 +1,8 @@
 use crate::chunk::*;
 use crate::value;
 use crate::constants;
+use crate::token::*;
+use crate::scanner::Scanner;
 
 pub enum InterpretResult {
     OK,
@@ -25,9 +27,35 @@ impl VM {
 
     pub fn free(&mut self) {}
 
-    pub fn interpret(&mut self, chunk: &Chunk) -> InterpretResult {
+    pub fn interpret(&mut self, source: &String) -> InterpretResult {
         self.ip = 0;
-        self.run(chunk)
+        self.compile(source)
+    }
+
+    fn compile(&mut self, source: &String) -> InterpretResult {
+        let mut scanner = Scanner::new(source);
+
+        let mut line: usize = 0;
+
+        loop {
+            let token: Token = scanner.scan_token();
+
+            if token.line != line {
+                print!("{:#4}", token.line);
+                line = token.line;
+            } else {
+                print!("   | ");
+            }
+            println!("{:#10?} '{token_start:.*}'", token.token_type, token.start.len(), token_start=token.start);
+
+            if token.token_type == TokenType::Eof {
+                break;
+            }
+        }
+
+
+
+        InterpretResult::OK
     }
 
     fn push(&mut self, value: value::Value) {
