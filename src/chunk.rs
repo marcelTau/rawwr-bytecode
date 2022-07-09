@@ -1,7 +1,12 @@
 use crate::value::*;
 
+#[derive(Debug)]
 pub enum OpCode {
     Constant,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
     Negate,
     Return,
 }
@@ -10,8 +15,12 @@ impl From<u8> for OpCode {
     fn from(code: u8) -> Self {
         match code {
             0 => OpCode::Constant,
-            1 => OpCode::Negate,
-            2 => OpCode::Return,
+            1 => OpCode::Add,
+            2 => OpCode::Subtract,
+            3 => OpCode::Multiply,
+            4 => OpCode::Divide,
+            5 => OpCode::Negate,
+            6 => OpCode::Return,
             _ => unimplemented!("Invalid Opcode"),
         }
     }
@@ -85,6 +94,10 @@ impl Chunk {
         match instruction {
             OpCode::Return => self.simple_instruction("OP_RETURN", offset),
             OpCode::Negate => self.simple_instruction("OP_NEGATE", offset),
+            OpCode::Add => self.simple_instruction("OP_ADD", offset),
+            OpCode::Subtract => self.simple_instruction("OP_SUBTRACT", offset),
+            OpCode::Multiply => self.simple_instruction("OP_MULTIPLY", offset),
+            OpCode::Divide => self.simple_instruction("OP_DIVIDE", offset),
             OpCode::Constant => self.constant_instruction("OP_CONSTANT", offset),
         }
     }

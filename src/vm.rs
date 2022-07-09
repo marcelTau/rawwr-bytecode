@@ -49,6 +49,19 @@ impl VM {
         chunk.constants.values[self.read_byte(chunk) as usize]
     }
 
+    fn do_binary_op(&mut self, opcode: OpCode) {
+        let b = self.pop();
+        let a = self.pop();
+
+        match opcode {
+            OpCode::Add => self.push(a + b),
+            OpCode::Subtract => self.push(a - b),
+            OpCode::Multiply => self.push(a * b),
+            OpCode::Divide => self.push(a / b),
+            _ => panic!("Binary operation is not allowed on type {:?}", opcode)
+        }
+    }
+
     fn run(&mut self, chunk: &Chunk) -> InterpretResult {
         loop {
             // only do this in debug builds
@@ -71,6 +84,7 @@ impl VM {
                     let value = self.pop();
                     self.push(-value)
                 },
+                opcode_type @ (OpCode::Add | OpCode::Subtract | OpCode::Multiply | OpCode::Divide) => self.do_binary_op(opcode_type),
                 OpCode::Constant => {
                     let constant = self.read_constant(chunk);
                     self.push(constant);
