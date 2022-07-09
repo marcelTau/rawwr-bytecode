@@ -74,7 +74,18 @@ impl Scanner {
                     self.line += 1;
                     self.advance()
                 }
-                _ => return
+                b'/' => {
+                    if self.peek_next() == b'/' {
+                        while self.peek() != b'\n' && !self.is_at_end() {
+                            self.advance();
+                        }
+                    } else {
+                        break
+                    }
+                    b' ' // @FIXME hacky workaround, how can i avoid this
+                }
+
+                _ => break,
             };
         }
     }
@@ -84,7 +95,17 @@ impl Scanner {
     }
 
     fn peek(&self) -> u8 {
+        if self.is_at_end() {
+            return b'\n';
+        }
         self.at(self.current + 1)
+    }
+
+    fn peek_next(&self) -> u8 {
+        if self.is_at_end() {
+            return b'\n';
+        }
+        self.at(self.current + 2)
     }
 
     fn advance(&mut self) -> u8 {
