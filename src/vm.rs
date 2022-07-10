@@ -2,6 +2,7 @@ use crate::chunk::*;
 use crate::value;
 use crate::constants;
 use crate::token::*;
+use crate::compiler::*;
 use crate::scanner::Scanner;
 
 pub enum InterpretResult {
@@ -28,33 +29,30 @@ impl VM {
     pub fn free(&mut self) {}
 
     pub fn interpret(&mut self, source: &String) -> InterpretResult {
-        self.ip = 0;
-        self.compile(source)
-    }
+        //self.ip = 0;
+        //self.compile(source)
 
-    fn compile(&mut self, source: &String) -> InterpretResult {
-        let mut scanner = Scanner::new(source);
+        let mut chunk = Chunk::new();
 
-        let mut line: usize = 0;
-
-        loop {
-            let token: Token = scanner.scan_token();
-
-            println!("      Got token: {:?}", token);
-
-            if token.line != line {
-                print!("{:#4} ", token.line);
-                line = token.line;
-            } else {
-                print!("   | ");
-            }
-
-            if token.token_type == TokenType::Eof {
-                break;
-            }
+        match self.compile(source, &mut chunk) {
+            InterpretResult::CompileError => {
+                return InterpretResult::CompileError;
+            },
+            _ => ()
         }
 
-        InterpretResult::OK
+        self.ip = 0;
+        self.run(&chunk)
+    }
+
+    fn compile(&mut self, source: &String, chunk: &mut Chunk) -> InterpretResult {
+        let mut parser = Parser::new();
+        let mut scanner = Scanner::new(source);
+
+        // advance();
+        // expression();
+        // consume(TokenType::Eof, "Expect end of expression.");
+        // return !parser.had_error();
     }
 
     fn push(&mut self, value: value::Value) {

@@ -12,6 +12,7 @@ mod chunk;
 mod scanner;
 mod token;
 mod constants;
+mod compiler;
 
 ////use chunk::*;
 use vm::*;
