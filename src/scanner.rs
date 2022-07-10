@@ -31,7 +31,7 @@ impl Scanner {
         self.source = self.source[self.current..].to_string();
         self.current = 0;
 
-        println!("Scanning source: '{}'({}) | current = {}", self.source.trim(), self.source.len(), self.current);
+        //println!("Scanning source: '{}'({}) | current = {}", self.source.trim(), self.source.len(), self.current);
 
         if self.is_at_end() {
             return self.make_token(TokenType::Eof);
@@ -96,7 +96,6 @@ impl Scanner {
     }
 
     fn identifier_type(&self) -> TokenType {
-        //println!("identifier_type: {:?}", self);
         match self.at(0) {
             'a' => return self.check_keyword(1, 2, "nd", TokenType::And),
             'c' => return self.check_keyword(1, 4, "lass", TokenType::Class),
@@ -132,9 +131,6 @@ impl Scanner {
 
     // @todo this really needs to be tested
     fn check_keyword(&self, start: usize, length: usize, rest: &str, ttype: TokenType) -> TokenType {
-
-        //println!("xx - {}", &self.source[start..(start + length)]);
-        //println!("self.current == start + length && &self.source[start..(start + length)] == rest = {}", self.current == start + length && &self.source[start..(start + length)] == rest);
         if self.current == start + length && &self.source[start..(start + length)] == rest {
             ttype
         } else {
@@ -143,7 +139,6 @@ impl Scanner {
     }
 
     fn identifier(&mut self) -> Token {
-        //println!("identifier");
         while is_alpha(self.peek()) || is_digit(self.peek()) {
             self.advance();
         }

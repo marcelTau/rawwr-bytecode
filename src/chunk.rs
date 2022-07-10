@@ -115,18 +115,3 @@ impl Chunk {
         offset + 2
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn x() {
-        let mut c = Chunk::new();
-        let constant = c.add_constant(1.2);
-        c.write_opcode(OpCode::Constant, 1);
-
-        assert_eq!();
-    }
-}
-
